@@ -54,3 +54,16 @@ class OrderStatusModel(BaseModel):
                 # "product_id": 12
             }
         }
+
+class ProductModel(BaseModel):
+    name: str
+    price: int
+
+    class Config:
+        form_attributes = True
+        json_schema_extra = {
+            "example": {
+                "name": "Just write some name dude!",
+                "price": 200
+            }
+        }

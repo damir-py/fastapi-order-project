@@ -1,5 +1,3 @@
-from statistics import quantiles
-
 from fastapi import APIRouter, Depends, status
 from fastapi.encoders import jsonable_encoder
 from fastapi.security import OAuth2PasswordBearer
@@ -8,8 +6,8 @@ from fastapi.exceptions import HTTPException
 from app.auth_utils import decode_access_token
 from app.database import Session, get_db
 
-from app.models import User, Product, Order
-from app.schemas import OrderModel, OrderStatusModel
+from app.models import User, Order
+from app.schemas import OrderModel
 
 order_router = APIRouter(
     prefix="/order"
@@ -106,15 +104,15 @@ async def get_order_by_id(pk: int, token: oauth2_scheme = Depends(), db: Session
         "ok": True,
         "code": 200,
         "data": {
-                "id": db_order.id,
-                "user_id": {
-                    "id": db_order.user.id,
-                    "username": db_order.user.username,
-                    "email": db_order.user.email
-                },
-                "product_id": db_order.product_id,
-                "quantity": db_order.quantity,
-                "order_status": db_order.order_status
-            }
+            "id": db_order.id,
+            "user_id": {
+                "id": db_order.user.id,
+                "username": db_order.user.username,
+                "email": db_order.user.email
+            },
+            "product_id": db_order.product_id,
+            "quantity": db_order.quantity,
+            "order_status": db_order.order_status
+        }
     }
     return res
