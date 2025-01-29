@@ -27,15 +27,15 @@ async def default(token: str = Depends(oauth2_scheme)):
 
 
 @order_router.post('/create/')
-async def create_order(order: OrderModel, token: str = Depends(oauth2_scheme), db: Session=Depends(get_db)):
+async def create_order(order: OrderModel, token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
     payload = decode_access_token(token)
     if payload is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
 
     db_user = db.query(User).filter(User.id == payload.get('user_id')).first()
     new_order = Order(
-        quantity = order.quantity,
-        order_status = order.order_statuses
+        quantity=order.quantity,
+        order_status=order.order_statuses
         # product_id = order.product_id
     )
 
@@ -44,9 +44,14 @@ async def create_order(order: OrderModel, token: str = Depends(oauth2_scheme), d
     db.commit()
 
     res = {
-        "id": new_order.id,
-        "quantity": new_order.quantity,
-        "order_statuses": new_order.order_status
+        "ok": True,
+        "code": 201,
+        "message": "Order successfully created!",
+        "data": {
+            "id": new_order.id,
+            "quantity": new_order.quantity,
+            "order_statuses": new_order.order_status
+        }
     }
 
-    return {"message": res}
+    return res
