@@ -16,7 +16,7 @@ order_router = APIRouter(
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='token')
 
 
-@order_router.get('/')
+@order_router.get('/', status_code=status.HTTP_200_OK)
 async def default(token: str = Depends(oauth2_scheme)):
     payload = decode_access_token(token)
     if payload is None:
@@ -25,7 +25,7 @@ async def default(token: str = Depends(oauth2_scheme)):
     return {"message": "This is order route page!"}
 
 
-@order_router.post('/create/')
+@order_router.post('/create/', status_code=status.HTTP_201_CREATED)
 async def create_order(order: OrderModel, token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
     payload = decode_access_token(token)
     if payload is None:
@@ -62,7 +62,7 @@ async def create_order(order: OrderModel, token: str = Depends(oauth2_scheme), d
     return res
 
 
-@order_router.get('/list/')
+@order_router.get('/list/', status_code=status.HTTP_200_OK)
 async def order_lists(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
     payload = decode_access_token(token)
     if payload is None:
@@ -96,7 +96,7 @@ async def order_lists(token: str = Depends(oauth2_scheme), db: Session = Depends
     raise HTTPException(status_code=status.HTTP_405_METHOD_NOT_ALLOWED, detail="U dont have access!")
 
 
-@order_router.get('/{pk}/')
+@order_router.get('/{pk}/', status_code=status.HTTP_200_OK)
 async def get_order_by_id(pk: int, token: oauth2_scheme = Depends(), db: Session = Depends(get_db)):
     payload = decode_access_token(token)
     if payload is None:
@@ -133,3 +133,10 @@ async def get_order_by_id(pk: int, token: oauth2_scheme = Depends(), db: Session
         }
     }
     return res
+
+
+@order_router.get("/user/", status_code=status.HTTP_200_OK)
+async def get_user_orders(token: oauth2_scheme = Depends(), db: Session = Depends(get_db)):
+    payload = decode_access_token(token)
+    if payload is None:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
