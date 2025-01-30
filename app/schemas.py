@@ -32,7 +32,7 @@ class OrderModel(BaseModel):
     quantity: int
     order_statuses: Optional[str] = '1'
     # user_id: Optional[int] = None
-    product_id: Optional[int] = None
+    product_id: int
 
     class Config:
         form_attributes = True

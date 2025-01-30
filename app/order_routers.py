@@ -34,8 +34,8 @@ async def create_order(order: OrderModel, token: str = Depends(oauth2_scheme), d
     db_user = db.query(User).filter(User.id == payload.get('user_id')).first()
     new_order = Order(
         quantity=order.quantity,
-        order_status=order.order_statuses
-        # product_id = order.product_id
+        order_status=order.order_statuses,
+        product_id=order.product_id
     )
 
     new_order.user = db_user
@@ -49,7 +49,13 @@ async def create_order(order: OrderModel, token: str = Depends(oauth2_scheme), d
         "data": {
             "id": new_order.id,
             "quantity": new_order.quantity,
-            "order_statuses": new_order.order_status
+            "order_statuses": new_order.order_status,
+            "product": {
+                "id": new_order.product.id,
+                "name:": new_order.product.name,
+                "price": new_order.product.price
+            },
+            "total_price": new_order.quantity * new_order.product.price
         }
     }
 
@@ -74,9 +80,14 @@ async def order_lists(token: str = Depends(oauth2_scheme), db: Session = Depends
                     "username": order.user.username,
                     "email": order.user.email
                 },
-                "product_id": order.product_id,
+                "product": {
+                    "id": order.product.id,
+                    "name": order.product.name,
+                    "price": order.product.price
+                },
                 "quantity": order.quantity,
-                "order_status": order.order_status
+                "order_status": order.order_status.value,
+                "total_price": order.quantity * order.product.price
             }
             for order in orders
         ]
@@ -95,24 +106,30 @@ async def get_order_by_id(pk: int, token: oauth2_scheme = Depends(), db: Session
     if user.is_staff is False:
         raise HTTPException(status_code=status.HTTP_405_METHOD_NOT_ALLOWED, detail="U dont have access!")
 
-    db_order = db.query(Order).filter(Order.id == pk).first()
+    order = db.query(Order).filter(Order.id == pk).first()
 
-    if db_order is None:
+    if order is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Order with id: < {pk} > not fount!")
 
     res = {
         "ok": True,
         "code": 200,
         "data": {
-            "id": db_order.id,
+            "id": order.id,
             "user_id": {
-                "id": db_order.user.id,
-                "username": db_order.user.username,
-                "email": db_order.user.email
+                "id": order.user.id,
+                "username": order.user.username,
+                "email": order.user.email
             },
-            "product_id": db_order.product_id,
-            "quantity": db_order.quantity,
-            "order_status": db_order.order_status
+            "product": {
+                "id": order.product.id,
+                "name": order.product.name,
+                "price": order.product.price
+            },
+            "quantity": order.quantity,
+            "order_status": order.order_status,
+            "total_price": order.quantity * order.product.price
+
         }
     }
     return res
