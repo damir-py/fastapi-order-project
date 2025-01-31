@@ -99,7 +99,6 @@ async def order_lists(token: str = Depends(oauth2_scheme), db: Session = Depends
     return custom_res
 
 
-
 @order_router.get("/user/", status_code=status.HTTP_200_OK)
 async def get_user_orders(token: oauth2_scheme = Depends(), db: Session = Depends(get_db)):
     payload = decode_access_token(token)
@@ -140,10 +139,10 @@ async def get_orders_by_id(pk: int, token: oauth2_scheme = Depends(), db: Sessio
     if payload is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid Token")
 
-
     user = db.query(User).filter(User.id == pk).first()
+    print(user, "*" * 50)
 
-    if user.is_staff is False or user is None:
+    if user is None or user.is_staff is False:
         raise HTTPException(status_code=status.HTTP_405_METHOD_NOT_ALLOWED, detail="No access!")
 
     custom_res = [
@@ -167,6 +166,41 @@ async def get_orders_by_id(pk: int, token: oauth2_scheme = Depends(), db: Sessio
     ]
 
     return custom_res
+
+
+@order_router.put('/{pk}/update/')
+async def update_order(pk: int, order: OrderModel, token: oauth2_scheme = Depends(), db: Session = Depends(get_db)):
+    payload = decode_access_token(token)
+    print(payload, "*" * 50)
+    if payload is None:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Enter valid access token!")
+
+    order_to_update = db.query(Order).filter(Order.id == pk).first()
+
+    if order_to_update is None:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Order not found!")
+
+    if order_to_update.user.id != payload.get("user_id"):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="U don't have right access to update!")
+
+    order_to_update.quantity = order.quantity
+    order_to_update.product_id = order.product_id
+    db.commit()
+
+    res = {
+        "ok": True,
+        "code": 200,
+        "message": "Your order updated successfully!",
+        "data": {
+            "id": order_to_update.id,
+            "quantity": order.quantity,
+            "product": order.product_id,
+            "order_status": order.order_statuses
+        }
+    }
+
+    return res
+
 
 @order_router.get('/{pk}/', status_code=status.HTTP_200_OK)
 async def get_order_by_id(pk: int, token: oauth2_scheme = Depends(), db: Session = Depends(get_db)):
@@ -205,5 +239,3 @@ async def get_order_by_id(pk: int, token: oauth2_scheme = Depends(), db: Session
         }
     }
     return res
-
-
